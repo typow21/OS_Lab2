@@ -19,7 +19,7 @@ void initShell();
 void getInput(char **line);
 // char* tokInput(char* line, char **cmd, 
 //                 char **arg1, char **arg2); //returns argFlag
-ssize_t getBatch(char *line, char *fileName, char **newArgv, char *argFlag);
+ssize_t getBatch(char *line, char *fileName, char **newArgv);
 char* tokInput(char *line, char **newArgv);
 int builtInCmd(char **newArgv); //returns 1 if it is a built in, else 0
 
@@ -39,51 +39,58 @@ int main(int argc, char** argv){
     char* line = NULL;
     char* argFlag;
     if(argc > 1){ //if the initial argument count to run the program is greater than one then take input from file
-        printf("Main loop: batch file\n");
+        // printf("Main loop: batch file\n");
+        // printf("%s\n", line);
         // printf("%s\n", argv[1]);
-        getBatch(line, argv[1], newArgv, argFlag);
+        // printf("%s\n", *newArgv);
+        getBatch(line, argv[1], newArgv);
+    }else{
+        while(1){ //forever loop
+            if(argc == 1){
+                // printf("Main loop: getting input from user\n");
+                getInput(&line);
+            }
+            argFlag = tokInput(line, newArgv);
+            // printf("Main loop: command: %s\n", newArgv[0]);
+            // printf("Main loop: arg flag: %s\n", argFlag);
+            if(builtInCmd(newArgv)){ 
+                // printf("Main loop: cool now what?\n");
+            }else{
+                //notBuiltinCmd() -- parameters?
+            }
+            //this will only work if there is a space after exit 
+            if(strcmp(newArgv[0], "exit") == 0){ //or eof then exit!
+                printf("Main loop: Exiting shell...\n"); 
+                exit(0);
+            }
+        }
     }
-    while(1){ //forever loop
-        if(argc == 1){
-            // printf("Main loop: getting input from user\n");
-            getInput(&line);
-        }
-        argFlag = tokInput(line, newArgv);
-        printf("Main loop: command: %s\n", newArgv[0]);
-        printf("Main loop: arg flag: %s\n", argFlag);
-        if(builtInCmd(newArgv)){ 
-            printf("Main loop: cool now what?\n");
-        }else{
-            //notBuiltinCmd() -- parameters?
-        }
-        //this will only work if there is a space after exit 
-        if(strcmp(newArgv[0], "exit") == 0){ //or eof then exit!
-            printf("Main loop: Exiting shell...\n"); 
-            exit(0);
-        }
-    }
+    
 }
 
 void initShell(){
     puts("\nWelcome to my linux shell!!");
 }
 
-ssize_t getBatch(char *line, char *fileName, char **newArgv, char *argFlag){
+ssize_t getBatch(char *line, char *fileName, char **newArgv){
+    // printf("%s\n", line);
+    // printf("%s\n", fileName);
+    // printf("%s\n", *newArgv);
     size_t len = 0;
     ssize_t lineSize;
-    FILE *file = fopen("test.txt", "r");
+    FILE *file = fopen(fileName, "r");
     if(!file){
         printf("file not found");
     }
     while(getline(&line, &len, file) != -1){
-        printf("Line : %s\n", line);
-        argFlag = tokInput(line, newArgv);
-        printf("%s\n", argFlag);
-        printf("%s \n", newArgv[0]);
-        printf("%s \n", newArgv[1]);
-        printf("%s \n", newArgv[2]);
+        // printf("line: %s", line);
+        char* argFlag = tokInput(line, newArgv);
+        // printf("%s\n", argFlag);
+        // printf("%s \n", newArgv[0]);
+        // printf("%s \n", newArgv[1]);
+        // printf("%s \n", newArgv[2]);
         if(builtInCmd(newArgv)){
-            printf("Main loop: cool now what?\n");
+            // printf("Main loop: cool now what?\n");
         }else{
             //notBuiltinCmd() -- parameters?
         }
@@ -97,7 +104,7 @@ ssize_t getBatch(char *line, char *fileName, char **newArgv, char *argFlag){
             exit(0);
         }
     }
-    return lineSize;
+    return 0;
 }
 
 void getInput(char **line){
@@ -116,7 +123,7 @@ int builtInCmd(char **newArgv){
             cd(newArgv[1]);
             return 1;
     }
-    else if(strcmp(cmd, "clr")== 0){
+    else if(strcmp(cmd, "clear")== 0){
             clr();
             return 1;
     }
@@ -190,12 +197,13 @@ char* tokInput(char* line, char** newArgv){
 //works
 void cd(char *arg1){
     //need to put spaces after this or it does not work 
+    // printf("\narg1: %s", arg1);
     if(chdir(arg1) == 0){
 
     }else{
-        printf("\nSomething went wrong with changing directories\n");
+        printf("\nSomething went wrong with changing directories\nYou may need to add space after arguments\n");
     }
-    printf("Built in command: cd\n");
+    // printf("Built in command: cd\n");
 }
 
 //works
@@ -210,9 +218,10 @@ void dir(){ //come back to this one slide 14-16
     DIR *dir = opendir(dirName);
     struct dirent *s; //directory entry
     while((s = readdir(dir)) != NULL){
-        printf("%s\t\n", s->d_name);
+        printf("%s\t", s->d_name);
     }
-    printf("Built in command: dir\n");
+    puts("\n");
+    // printf("Built in command: dir\n");
 }
 
 //works
@@ -236,7 +245,16 @@ void echo(char** newArgv){
 
 //works but needs to be finished
 void help(){
-    printf("Built in command: help\n");
+    printf("\n==================================== HELP ====================================================\n"
+           "\nFUNCTIONS\n"
+           "echo : \tPrints arguments given to the terminal\n"
+           "cd : \tChanges the  directory\n"
+           "dir : \tPrints the current directory\n"
+           "environ: \tPrints all directories associated with this shell\n"
+           "clear: \t\tClears the terminal\n"
+           "pause: \t\tPauses the terminal until ENTER is pressed\n"
+           "quit: \t\tExits the terminal\n\n"
+   );
 }
 
 //works
